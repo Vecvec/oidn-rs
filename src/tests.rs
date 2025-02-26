@@ -1,8 +1,8 @@
 use std::mem;
 
 #[cfg(test)]
-#[test]
-fn buffer_read_write() {
+#[async_std::test]
+async fn buffer_read_write() {
     let device = crate::Device::new();
     let mut buffer = match device.create_buffer(&[0.0]) {
         Some(buffer) => buffer,
@@ -14,9 +14,14 @@ fn buffer_read_write() {
     };
     buffer.write(&[1.0]).unwrap();
     assert_eq!(buffer.read(), vec![1.0]);
+    assert_eq!(device.read_buffer_async(&buffer).await, vec![1.0]);
     let mut slice = vec![0.0];
     buffer.read_to_slice(&mut slice).unwrap();
     assert_eq!(slice, vec![1.0]);
+    device.write_buffer_async(&mut buffer, &[2.0]).unwrap().await;
+    let mut slice = vec![0.0];
+    device.read_buffer_to_slice_async(&buffer, &mut slice).unwrap().await;
+    assert_eq!(slice, vec![2.0]);
     if let Err((err, str)) = device.get_error() {
         panic!("test failed with {err:?}: {str}")
     }

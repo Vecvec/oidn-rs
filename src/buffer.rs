@@ -1,8 +1,6 @@
+use std::future::Future;
 use crate::Device;
-use crate::sys::{
-    OIDNBuffer, oidnGetBufferSize, oidnNewBuffer, oidnReadBuffer, oidnReleaseBuffer,
-    oidnWriteBuffer,
-};
+use crate::sys::{OIDNBuffer, oidnGetBufferSize, oidnNewBuffer, oidnReadBuffer, oidnReleaseBuffer, oidnWriteBuffer, oidnReadBufferAsync, oidnSyncDevice, oidnWriteBufferAsync};
 use std::mem;
 use std::sync::Arc;
 
@@ -103,5 +101,64 @@ impl Buffer {
 impl Drop for Buffer {
     fn drop(&mut self) {
         unsafe { oidnReleaseBuffer(self.buf) }
+    }
+}
+
+
+impl<'a> Device {
+    /// Reads from the buffer into the provided slice, returns a future where
+    /// [`Buffer::write`] would return Some
+    pub fn write_buffer_async(&'a self, buf: &'a mut Buffer, slice: &'a [f32]) -> Option<impl Future + use<'a>> {
+        if buf.size != slice.len() {
+            return None;
+        }
+        unsafe {
+            oidnWriteBufferAsync(
+                buf.buf,
+                0,
+                buf.size * mem::size_of::<f32>(),
+                slice.as_ptr() as _,
+            );
+        }
+        Some(async move {
+            unsafe { oidnSyncDevice(self.0) }
+            let _ = slice;
+            let _ = buf;
+        })
+    }
+    /// Reads from the buffer into the provided slice, returns a future where
+    /// [`Buffer::read_to_slice`] would return Some
+    pub fn read_buffer_to_slice_async(&'a self, buf: &Buffer, slice: &'a mut [f32]) -> Option<impl Future  + use<'a>> {
+        if buf.size != slice.len() {
+            return None;
+        }
+        unsafe {
+            oidnReadBufferAsync(
+                buf.buf,
+                0,
+                buf.size * mem::size_of::<f32>(),
+                slice.as_ptr() as *mut _,
+            );
+        }
+        Some(async move {
+            unsafe { oidnSyncDevice(self.0) }
+            let _ = slice;
+        })
+    }
+    /// Reads from the buffer
+    pub fn read_buffer_async(&'a self, buf: &Buffer) -> impl Future<Output = Vec<f32>> + use<'a> {
+        let contents = vec![0.0; buf.size];
+        unsafe {
+            oidnReadBufferAsync(
+                buf.buf,
+                0,
+                buf.size * mem::size_of::<f32>(),
+                contents.as_ptr() as *mut _,
+            );
+        }
+        async move {
+            unsafe { oidnSyncDevice(self.0) }
+            contents
+        }
     }
 }
