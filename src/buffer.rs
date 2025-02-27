@@ -132,7 +132,7 @@ impl<'a> Device {
     /// [`Buffer::read_to_slice`] would return Some
     pub fn read_buffer_to_slice_async(
         &'a self,
-        buf: &Buffer,
+        buf: &'a Buffer,
         slice: &'a mut [f32],
     ) -> Option<impl Future + use<'a>> {
         if buf.size != slice.len() {
@@ -149,7 +149,10 @@ impl<'a> Device {
         Some(async move { unsafe { oidnSyncDevice(self.0) } })
     }
     /// Reads from the buffer
-    pub fn read_buffer_async(&'a self, buf: &Buffer) -> impl Future<Output = Vec<f32>> + use<'a> {
+    pub fn read_buffer_async(
+        &'a self,
+        buf: &'a Buffer,
+    ) -> impl Future<Output = Vec<f32>> + use<'a> {
         let contents = vec![0.0; buf.size];
         unsafe {
             oidnReadBufferAsync(
