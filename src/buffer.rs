@@ -122,8 +122,6 @@ impl<'a> Device {
         }
         Some(async move {
             unsafe { oidnSyncDevice(self.0) }
-            let _ = slice;
-            let _ = buf;
         })
     }
     /// Reads from the buffer into the provided slice, returns a future where
@@ -142,7 +140,6 @@ impl<'a> Device {
         }
         Some(async move {
             unsafe { oidnSyncDevice(self.0) }
-            let _ = slice;
         })
     }
     /// Reads from the buffer
