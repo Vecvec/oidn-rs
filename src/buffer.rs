@@ -1,6 +1,9 @@
-use std::future::Future;
 use crate::Device;
-use crate::sys::{OIDNBuffer, oidnGetBufferSize, oidnNewBuffer, oidnReadBuffer, oidnReleaseBuffer, oidnWriteBuffer, oidnReadBufferAsync, oidnSyncDevice, oidnWriteBufferAsync};
+use crate::sys::{
+    OIDNBuffer, oidnGetBufferSize, oidnNewBuffer, oidnReadBuffer, oidnReadBufferAsync,
+    oidnReleaseBuffer, oidnSyncDevice, oidnWriteBuffer, oidnWriteBufferAsync,
+};
+use std::future::Future;
 use std::mem;
 use std::sync::Arc;
 
@@ -104,11 +107,14 @@ impl Drop for Buffer {
     }
 }
 
-
 impl<'a> Device {
     /// Reads from the buffer into the provided slice, returns a future where
     /// [`Buffer::write`] would return Some
-    pub fn write_buffer_async(&'a self, buf: &'a mut Buffer, slice: &'a [f32]) -> Option<impl Future + use<'a>> {
+    pub fn write_buffer_async(
+        &'a self,
+        buf: &'a mut Buffer,
+        slice: &'a [f32],
+    ) -> Option<impl Future + use<'a>> {
         if buf.size != slice.len() {
             return None;
         }
@@ -120,13 +126,15 @@ impl<'a> Device {
                 slice.as_ptr() as _,
             );
         }
-        Some(async move {
-            unsafe { oidnSyncDevice(self.0) }
-        })
+        Some(async move { unsafe { oidnSyncDevice(self.0) } })
     }
     /// Reads from the buffer into the provided slice, returns a future where
     /// [`Buffer::read_to_slice`] would return Some
-    pub fn read_buffer_to_slice_async(&'a self, buf: &Buffer, slice: &'a mut [f32]) -> Option<impl Future  + use<'a>> {
+    pub fn read_buffer_to_slice_async(
+        &'a self,
+        buf: &Buffer,
+        slice: &'a mut [f32],
+    ) -> Option<impl Future + use<'a>> {
         if buf.size != slice.len() {
             return None;
         }
@@ -138,9 +146,7 @@ impl<'a> Device {
                 slice.as_ptr() as *mut _,
             );
         }
-        Some(async move {
-            unsafe { oidnSyncDevice(self.0) }
-        })
+        Some(async move { unsafe { oidnSyncDevice(self.0) } })
     }
     /// Reads from the buffer
     pub fn read_buffer_async(&'a self, buf: &Buffer) -> impl Future<Output = Vec<f32>> + use<'a> {

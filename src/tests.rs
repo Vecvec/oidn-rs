@@ -18,9 +18,15 @@ async fn buffer_read_write() {
     let mut slice = vec![0.0];
     buffer.read_to_slice(&mut slice).unwrap();
     assert_eq!(slice, vec![1.0]);
-    device.write_buffer_async(&mut buffer, &[2.0]).unwrap().await;
+    device
+        .write_buffer_async(&mut buffer, &[2.0])
+        .unwrap()
+        .await;
     let mut slice = vec![0.0];
-    device.read_buffer_to_slice_async(&buffer, &mut slice).unwrap().await;
+    device
+        .read_buffer_to_slice_async(&buffer, &mut slice)
+        .unwrap()
+        .await;
     assert_eq!(slice, vec![2.0]);
     if let Err((err, str)) = device.get_error() {
         panic!("test failed with {err:?}: {str}")
