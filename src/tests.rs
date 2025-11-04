@@ -42,7 +42,6 @@ fn buffer_import_read_write() {
     }
 }
 
-
 #[cfg(test)]
 #[test]
 fn buffer_read_write_async() {
@@ -64,7 +63,7 @@ fn buffer_read_write_async() {
     // buffer.read();
     let vector = must_use.synchronise_now();
     assert_eq!(vector, vec![1.0]);
-        if let Err((err, str)) = device.get_error() {
+    if let Err((err, str)) = device.get_error() {
         panic!("test failed with {err:?}: {str}")
     }
 }
