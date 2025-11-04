@@ -41,3 +41,30 @@ fn buffer_import_read_write() {
         panic!("test failed with {err:?}: {str}")
     }
 }
+
+
+#[cfg(test)]
+#[test]
+fn buffer_read_write_async() {
+    let device = crate::Device::new();
+    let mut buffer = match device.create_buffer(&[0.0]) {
+        Some(buffer) => buffer,
+        // resources failing to be created is not the fault of this library
+        None => {
+            eprintln!("Test skipped due to buffer creation failing");
+            return;
+        }
+    };
+    let must_use = device.write_buffer_async(&mut buffer, &[1.0]).unwrap();
+    // This will fail
+    // buffer.read();
+    must_use.synchronise_now();
+    let must_use = device.read_buffer_async(&mut buffer);
+    // This will fail
+    // buffer.read();
+    let vector = must_use.synchronise_now();
+    assert_eq!(vector, vec![1.0]);
+        if let Err((err, str)) = device.get_error() {
+        panic!("test failed with {err:?}: {str}")
+    }
+}
