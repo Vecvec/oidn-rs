@@ -15,7 +15,11 @@ use crate::sys::{OIDNDevice, oidnRetainDevice, oidnSyncDevice};
 /// this will leave the resource that is used by this in an
 /// unusable state, crashing the process apon usage.
 pub struct MustSync<'a, R> {
+    /// The device that we must synchronise
     raw_device: OIDNDevice,
+    /// Lock to be released once dropped
+    ///
+    /// We need this to prevent unsoundness from `forget`ing this [`MustSync`]
     _lock: RwLockWriteGuard<'a, ()>,
     /// function to be called after sync has happened.
     ///
@@ -73,6 +77,10 @@ impl<R> MustSync<'_, R> {
         unsafe { oidnRetainDevice(device) };
         sync_lock.check_valid();
         sync_lock.0.clear_poison();
+        // We've just cleared poison as well as checking this is valid, we
+        // have exclusive ownership (because of `&mut`) so no other thread
+        // should have updated this in the mean time. Therefore, we can `unwrap`
+        // safely.
         let lock = sync_lock.0.write().unwrap();
         MustSync {
             raw_device: device,
