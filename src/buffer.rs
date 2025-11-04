@@ -83,8 +83,8 @@ impl Device {
             unsafe {
                 oidnWriteBufferAsync(buffer.buf, 0, byte_size, contents.as_ptr() as *const _);
             }
-            Some(MustSync::must_sync(
-                self.0,
+            Some(MustSync::new(
+                self,
                 &mut buffer.sync_lock,
                 Box::new(|| ()),
             ))
@@ -108,8 +108,8 @@ impl Device {
             );
         }
         let size = buffer.size;
-        MustSync::must_sync(
-            self.0,
+        MustSync::new(
+            self,
             &mut buffer.sync_lock,
             Box::new(move || unsafe {
                 let mut vec = vec;

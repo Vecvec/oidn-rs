@@ -69,12 +69,16 @@ impl<R> MustSync<'_, R> {
     ///
     /// `func` is executed after the synchronisation, and it should have no
     /// side effects, it may not be executed if the value isn't required.
-    pub fn must_sync<'a>(
-        device: OIDNDevice,
+    /// 
+    /// To prevent UB at any place where the resource needs synchronisation,
+    /// one should call [`SyncLock::check_valid`]. Just Calling this function
+    /// and returning the result will **not** suffice.
+    pub fn new<'a>(
+        device: &crate::Device,
         sync_lock: &'a mut SyncLock,
         func: Box<dyn FnOnce() -> R>,
     ) -> crate::MustSync<'a, R> {
-        unsafe { oidnRetainDevice(device) };
+        unsafe { oidnRetainDevice(device.0) };
         sync_lock.check_valid();
         sync_lock.0.clear_poison();
         // We've just cleared poison as well as checking this is valid, we
@@ -83,7 +87,7 @@ impl<R> MustSync<'_, R> {
         // safely.
         let lock = sync_lock.0.write().unwrap();
         MustSync {
-            raw_device: device,
+            raw_device: device.0,
             _lock: lock,
             func: Some(func),
         }
