@@ -69,7 +69,7 @@ impl<R> MustSync<'_, R> {
     ///
     /// `func` is executed after the synchronisation, and it should have no
     /// side effects, it may not be executed if the value isn't required.
-    /// 
+    ///
     /// To prevent UB at any place where the resource needs synchronisation,
     /// one should call [`SyncLock::check_valid`]. Just Calling this function
     /// and returning the result will **not** suffice.

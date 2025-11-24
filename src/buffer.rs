@@ -67,9 +67,11 @@ impl Device {
         self.1.as_ref() as *const _ as isize == buf.device_arc.as_ref() as *const _ as isize
     }
 
-    /// Writes asyncronously to the buffer, returns [None] if the sizes mismatch.
+    /// Writes asyncronously to the buffer, returns [None] if the sizes
+    /// mismatch.
     ///
-    /// Will prevent a user from writing to the buffer until they synchronise with this
+    /// Will prevent a user from writing to the buffer until they synchronise
+    /// with this
     pub fn write_buffer_async<'s>(
         &self,
         buffer: &'s mut Buffer,
@@ -83,18 +85,16 @@ impl Device {
             unsafe {
                 oidnWriteBufferAsync(buffer.buf, 0, byte_size, contents.as_ptr() as *const _);
             }
-            Some(MustSync::new(
-                self,
-                &mut buffer.sync_lock,
-                Box::new(|| ()),
-            ))
+            Some(MustSync::new(self, &mut buffer.sync_lock, Box::new(|| ())))
         }
     }
 
     /// Reads asyncronously from the buffer to an array.
     ///
-    /// Will prevent a user from writing to the buffer until they syncronise with this
-    // Note: this is mutable becuase oidn states that we cannot access the contents of this buffer until after this has synchronised
+    /// Will prevent a user from writing to the buffer until they syncronise
+    /// with this
+    // Note: this is mutable becuase oidn states that we cannot access the contents
+    // of this buffer until after this has synchronised
     pub fn read_buffer_async<'s>(&self, buffer: &'s mut Buffer) -> MustSync<'s, Vec<f32>> {
         buffer.sync_lock.check_valid();
 
